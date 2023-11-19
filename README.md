@@ -1,4 +1,4 @@
-# Pro-Spring-6
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/4157d9a8-9116-459a-8923-c70162c808b4)# Pro-Spring-6
 A Repository Containing a Summary of Pro Spring 6 book
 
 ## Introducing IoC and DI in Spring
@@ -94,3 +94,25 @@ A Repository Containing a Summary of Pro Spring 6 book
     - <b>websocket</b>: a single instance of bean is created for the lifecycle of teh WebSocket. only for web application
     - <b>custom</b>: a custom scope that can be created by implementing the Scope interface and registering it in a configuration class
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/495e416a-8cb9-48a3-99f3-d07ce22c4f71)
+* we go on to or next subject wich is resolving dependencies.
+* spring is able to resolve any dependencies on it's own by looking and your configuration files or classes but if there is a situation where a component doesn't define a dependency through configuration files and attempts to get it directly from context, it may create this component ahead of the required dependency
+* the solution here is to the @DependsOn annotation in our component to tell spring to create the dependency first.
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/85268415-d1cf-40b9-8e2e-9b813c64b528)
+* if you notice you can see that the Singer class is impelementing the ApplicationContextAware interface which forces the class to implement a setter method by which spring injects an instance of the context into class so the class can access the context to get it's dependency
+* this approach is to be avoided however, instead our class heirerachy should be designed well enough so that spring can detect these relationships implicity and doesn't need to be told explicity which components depend on which (spring manages a dependency graph internally)
+* this approach is mostly suitable when working with legacy code
+* next we go on to how to autowire our beans
+* spring does so in 5 manners:
+    - <b>byName</b>: spring attempts tp match each dependency using their respective name i.e using @Qualifier annotation ofcourse if it exists in ApplicationContext
+    - <b>byType</b>: spring does this automatically where it matches dependencies using thair types if a bean of the same type exists in ApplicationContext i.e setter injection or field injection
+    - <b>constructor</b>: just like "byType" but spring uses the constructor instead of setter or field injection. spring attempts to match to the constrcutor with greater number of arguments if it is not explicitly specified. for example if you have a String and Integer dependnecy and have two constructors which one takes one String argument and the other takes a String and Integer, spring uses the latter. (based on my searches if opposite of this were to happen, meaning that i have one dependnecy defined for a component for example of type Foo and i have two constructors one that accepts Foo and another that accepts Foo and Integer, spring will use the second one and if it cannot find any value for the second parameter by looking through context and configurations it will pass null for that argument so be careful in these scenarios)
+    - <b>default</b>: spring will alternate between *constrcutor* and *byType* modes. if you have a default constructor (no arg) then *byType* is used otherwise *constructor*
+    - <b>no</b>: no autowiring
+* as i mentioned if a constrcutor is explicitly marked using @Autowired, spring will use the one that is the most "suitable" (take it with a grain of salt) if there are multiple suitable constructors the default constructor is used. if there is non a BeanInstantiationException is thrown
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/ec742511-e57d-48ca-a210-3ee5e7a3824a)
+* in this example the no arg constructor is called, and if it is removed we will get an exception from spring so we should annotate a constructor that suites us by @Autowired. becareful not two annotate two constrcutors the compiler won't care about it but it will confuse spring (feel free to try it yourself)
+* if we are not using constrcutors and using setters annotated with @Autowired or field injection then it is byType inejction
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/1334a49f-ed38-48f9-a3ce-47aa9fa235d9)
+* however if we have multiple beans of the same type the context (either defining the same twice with different names or multiple implementations of an interface) then spring cannot create the component since it is matching them by their type and there are multiple of the same type in context and we'll get NoUniqueBeanDefinitionException
+* that is where we can use the *byName* autowiring type
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/a15b9674-d94a-4a43-adf1-a20cba91236e)
