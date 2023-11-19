@@ -1,4 +1,4 @@
-![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/4157d9a8-9116-459a-8923-c70162c808b4)# Pro-Spring-6
+# Pro-Spring-6
 A Repository Containing a Summary of Pro Spring 6 book
 
 ## Introducing IoC and DI in Spring
@@ -108,7 +108,7 @@ A Repository Containing a Summary of Pro Spring 6 book
     - <b>constructor</b>: just like "byType" but spring uses the constructor instead of setter or field injection. spring attempts to match to the constrcutor with greater number of arguments if it is not explicitly specified. for example if you have a String and Integer dependnecy and have two constructors which one takes one String argument and the other takes a String and Integer, spring uses the latter. (based on my searches if opposite of this were to happen, meaning that i have one dependnecy defined for a component for example of type Foo and i have two constructors one that accepts Foo and another that accepts Foo and Integer, spring will use the second one and if it cannot find any value for the second parameter by looking through context and configurations it will pass null for that argument so be careful in these scenarios)
     - <b>default</b>: spring will alternate between *constrcutor* and *byType* modes. if you have a default constructor (no arg) then *byType* is used otherwise *constructor*
     - <b>no</b>: no autowiring
-* as i mentioned if a constrcutor is explicitly marked using @Autowired, spring will use the one that is the most "suitable" (take it with a grain of salt) if there are multiple suitable constructors the default constructor is used. if there is non a BeanInstantiationException is thrown
+* as i mentioned if a constrcutor is explicitly marked using @Autowired, spring will use the one that is the most "suitable" (take it with a grain of salt) if there are multiple suitable constructors the default constructor is used. if there is non a BeanInstantiationException is thrown<br />
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/ec742511-e57d-48ca-a210-3ee5e7a3824a)
 * in this example the no arg constructor is called, and if it is removed we will get an exception from spring so we should annotate a constructor that suites us by @Autowired. becareful not two annotate two constrcutors the compiler won't care about it but it will confuse spring (feel free to try it yourself)
 * if we are not using constrcutors and using setters annotated with @Autowired or field injection then it is byType inejction
