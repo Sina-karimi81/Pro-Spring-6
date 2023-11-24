@@ -116,3 +116,77 @@ A Repository Containing a Summary of Pro Spring 6 book
 * however if we have multiple beans of the same type the context (either defining the same twice with different names or multiple implementations of an interface) then spring cannot create the component since it is matching them by their type and there are multiple of the same type in context and we'll get NoUniqueBeanDefinitionException
 * that is where we can use the *byName* autowiring type
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/a15b9674-d94a-4a43-adf1-a20cba91236e)
+
+## Advanced Spring Configuration and Spring Boot
+* in this chapter we are going to learn about managing bean lifecycle, making beans spring aware, Factory Beans, PropertyEditor Implementations, application context, testing spring applications, using spring boot and finally using configuration enhancements
+### Spring's mpact on application portability
+* most of the features we tyalk about in here are specific to spring and not available on other IoC containers
+* as with many other things, there tradeoffs with using spring specific features (coupling to spring) or making our application portable with other IoC containers
+* just be careful not to restrict yourself to be portable when there is no requirement for it otherwise it would put you in a disadvantage from the start
+### Bean Life-Cycle Management
+* in general in any IoC containe , beans are created in such way that they can be notified by the container in certain stages of their life cycle.
+* in general there are two life cycle events that are relevant to a bean:
+    - post initialization: after a bea has bean created and all the dependencies are resolved
+    - pre destrcution: right before a bean is destroyed by spring
+* however in spring, for a bean of prototype scope the pre destruction event is not fired
+* spring provides three ways for a bean to hook into these events
+    - interface based: a bean implements the interface required to use the callback method for the event to be triggered
+    - method based: spring lets us specify a methodd to be used when these events are triggered. these methods are specified in our configuration for beans
+    - annotation based: a method is marked with annotations related to post initialization or pre destruction phase
+* these approaches have the same result however they differ in requirement and where to use them
+* for example if you are coupled with spring or have many classes of the same type (i.e implementing the same interface or extending the same class) using the interface based approach may be more suitable where you are implement the method once and be done with it
+### Hooking into Bean Creation
+* we can do anything in the initialization callback but usually it is used to check whether the required dependencies were provided correctly or not
+* because spring resolves dependencies using the contrcutor or setters those are not suitable places to check validity hence using initialization callback that is called after the dependencies are resolved
+* the first appraoch we are going to discuss is the method based approach
+* it is particaularly useful when we have few beans of the same type or trying to decouple or application from spring or working with beans that were already defined or provided by a third party
+* all we have to do is to specifiy a method name in the initMethod of the @Bean
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/1ad0a16e-c785-47dc-a973-01c2fe68fe59)
+* the only contraint on our init method is that it cannot accept inputs
+* the benefits of this apraoched are negetaed when using static initialiaztion method because a beans state cannot be accessed to validate it
+* the second appraoch is using the interface provided by spring called the *InitializationBean*
+* still used to validate our dependencies, this interface provides a single method named *afterSetProperties()* which again works exactly like the init() method we used in the last approach
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/eb7f1e78-d0c3-4b3c-b9cc-942edc5860f4)
+* the third approach is ti use the *@PostConstruct* annotation to mark the desired method
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/8c9f9e0c-1832-4ee7-bd48-34b12b9c5431)
+* each approach has it is own drawbacks and benefits
+    - using the method based has the benefit of decoupling our application from spring so it can be portable but we have to specify it for every bean
+    - using the iterface, we define the mehtod once for all instances of the bean and reduces the amount of configuration and probability of errors but we are coupled to spring
+    - using the annotation, we still have the portability option but the IoC container must upport JSR-250
+* if we use all of the at the same time there is an order to them. first the bean is created and it's dependencies are resolved, then the @PostConstrcut method is called then the afterSetProperties() method and finally the method specified in the @Bean
+### Hooking into Bean Destrcution
+* we can call the *destroySingletons()* of ApplicationContext to destroy all the singleton bean (obviously...)
+* typically this is done when our application is shutting down and allows us to shut down gracefully and close any resouces our beans are using or flush them to a database or terminate lingering threads
+* the mechanisms used here are similar to the initialization mechanisms and are often used in conjunction with them. this enables us to configure or open a resource in initilize callback and then close it in destruction callback
+* the first mechanism is to give the name of the desired method to the destroyMethod attribute of the @Bean
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/ef75124f-f024-405b-beab-d7ba35bf3658)
+* the other mechanism is to implement the DisposableBean interface which bring a destroy() method with itself to our bean 
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/dec78665-2332-4ece-aab7-08b72fefb947)
+* and finally using the @PreDestroy annotation
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/1b5df71e-d6d7-4458-ab0c-b4d7edfd7aaa)
+* the usages and order of execution are the same as initialization callbacks
+* the only drawback of destruction callbacks in spring is that they are not fired automatically and we should call the *ctx.close()* before our application is close however it is not that easy in a real application
+* java allows us to create a shut down hook which is a thread that runs before the application shuts down. to do this we can use the *ctx.registerShutdownHook()* method and instead of *ctx.close()*
+### Making Your Beans "Spring Aware"
+* some times we may need to access the application context through our beans for requirement. for example a bean that registers a shutdown hook or a bean that needs to know it name
+* it is worth saying that giving a bean name business logic is generally a bad idea and should be avoided but in certain situations such logging when there are multiple instances of the same using the bean name is a good idea
+* by using the BeanNameAware interface and it's *setBeanName()* method., spring calls this method after configuring the bean and before callbacks (initialization and destruction)
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/772dad44-e5d6-49c7-8f8e-5b2e26c04a41)
+* as mentioned earlier don't give bean namse business logic but if you need to do it use interfaces like Nameable and it's method *setName()* to give a bean a specific name using dependency injection.
+* another way is to use the ApplicationContextAware interface and it's setApplicationContext method. by implementing this interface we can get a reference to the application context the manages a bean to get other bean (should be avoided if unneccessary) or register different hooks
+### Use of FactoryBeans
+* there are situation where we cannot create objects usign the new operator for example static factory methods. this brings up and issue in creating and injecting beans
+* that why sprig provides FactoryBean interface to wrk as an adapter between these objects and spring beans. it's implmentations work as facory for other beans
+* FactoryBeans aare configured like any other bean but when supllying a bean request spring calls the FactoryBean.getObject() method automatically to provide the desired dependency
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/b9fbfcab-8617-4b6d-9332-715f9013f463)
+* the getObject() method returns the desired object, the getObjectType() method returns the type of the object return by getObject() for autowiring purposes but can return null if it's not know or know after the initialization of FactorBean, the isSingleton() return the scope of the bean returned by getObject(). if you use @Scope on the FactoryBean configuration it represents the FactoryBean itself not the object it returns<br />
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/12b0e5cb-b06d-4b70-a374-1e4f442975ae)
+* we can access the FactoryBean directly as well but it is not recommended since it is a supporting infrastructure and there wouldn't be a nedd to access it directly
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/80d96a88-a163-4bb1-840d-ef3f3010e60c)\
+### Property Editors
+* PropertyEditor is an interface that allows us to change the the value of a property from and to String
+* this was orriginally used to input property values as string and then convert them to their correct type
+* sprig allows us to implement this interface to convert string based properties to their correct type
+* spring uses/provides many implementations of PropertEditor interface which leave to yourself to check out
+
+
