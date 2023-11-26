@@ -119,7 +119,7 @@ A Repository Containing a Summary of Pro Spring 6 book
 
 ## Advanced Spring Configuration and Spring Boot
 * in this chapter we are going to learn about managing bean lifecycle, making beans spring aware, Factory Beans, PropertyEditor Implementations, application context, testing spring applications, using spring boot and finally using configuration enhancements
-### Spring's mpact on application portability
+### Spring's impact on application portability
 * most of the features we tyalk about in here are specific to spring and not available on other IoC containers
 * as with many other things, there tradeoffs with using spring specific features (coupling to spring) or making our application portable with other IoC containers
 * just be careful not to restrict yourself to be portable when there is no requirement for it otherwise it would put you in a disadvantage from the start
@@ -187,6 +187,43 @@ A Repository Containing a Summary of Pro Spring 6 book
 * PropertyEditor is an interface that allows us to change the the value of a property from and to String
 * this was orriginally used to input property values as string and then convert them to their correct type
 * sprig allows us to implement this interface to convert string based properties to their correct type
-* spring uses/provides many implementations of PropertEditor interface which leave to yourself to check out
-
-
+* spring uses/provides many implementations of PropertEditor interface which I leave to yourself to check out
+* however if none the basic implementations are good for your situation you create your custom PropertyEditor by implementing this interface or Since JDK 5 implementing PropertyEditorSupport interface that has a single method called setAsText()
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/47958626-f608-4ef3-b150-0c009d11b7c2)
+* as you can see a map is used to register this editor where the key is the class or type we want to convert the text to
+### Internationalization
+* spring excels at supporting i18n (aka Internationalization) by using the MessageResource interface we can access string resources called messages stored in different languages
+* ApplicationContext class implements this interface and while it is not needed to use ApplicationContext as a messageResource it is good to know about
+* in any environment, the messages are loaded automatically by spring but automatic access is only available when using sprin MVC to build webapps
+* spring provide 3 MessageResource implementations:
+    - StaticMessageSorce which should not be used in production since it cannot be configured externally
+    - ResourceBundleMessageSource which uses ResourceBundles in java to load messages
+    - ReloadableResourceBundleMessageSource which like the ResourceBundleMessageSource but it has built in schedulers that reload the resource files
+* each of these implementations also implement HierarcalMessageSource which enable nesting of message resources
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/6d437298-8553-4650-9d1f-50010a49258d)
+* note that the bean defined for the message source must be named messageSource()
+* the baseName property defines the files and the locale defines which file to choose from for example for baseName of Foo and different locales we have: 1- Foo_en_Us.properties 2- Foo_fa_PR
+* you may ask why use the applicationContext as a message resource in webapps? well when using sprin MVC, spring accesses ApplicationContext from ApplicationObjectSupport class, wraps it (ApplicationContext) in a MessageResourceAccessor object and then the MessageResourceAccessor is used to work with message resources
+* the other reason is that spring exposes the ApplicationContext to the view tier (the view part of the MVC model) so when message are accessed from JSP tags they are read automatically from ApplicationContext
+* for using message source in stand alone apps we can use the MessageSourceResolvable interface and dependency injection
+### Event Publication
+* ApplicationContext can also work as a broker and publish events
+* and event is a class that extends ApplicationEvent class
+* any bean that imeplements the ApplicationListener<T> interface is automatically registered as a listener for events by spring where T is the type of message it receives
+* events are published using hte ApplicationEventPublisher.publishEvent() so the publishing class must have knowledge of ApplicationContext (which extends ApplicationEventPublisher)
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/4e791f6e-24f8-47b0-8624-2672d92ef4df)
+* when an event is raised the onApplicatioEvent() method is called by spring
+* typically w euse events to execute logic that should be done quickly and outside of the normal flow of the program. for example to process of invalidating the data inside a cache where the component responsible for updating data notifies the cahce that some data is invalidated
+* for long running processes using using JMS or RabbitMQ or Kafka is a better solution
+### Accessing Resources
+* often we need to access some properties that are stored in files or jar files in classpath or in a remote server
+* to access these properties, spring has a Resource interface with 3 implementations: 1-FileSystemResource 2-ClassPathResource 3- UrlResource
+* spring uses another interface called ResourceLoader and its implementations DefaultResourceLoader and ApplicationContext to locate and create Resource instances
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/e35efffa-f44a-447b-9e92-2f382e9fa06e)
+* note that spring treats both file: and http: as UrlResource but you can use FileSystemResource if you want to
+### Advanced JAva COnfiguration Classes
+* look at the code below
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/66d31822-569f-4c80-98ee-53d72c6efa93)
+* you notice that a @PropertySource annotation is used to access a properties file. this annotation is used to load properties files into spring ApplicationContext which accepts location as it's argument. several locations can be provided
+* also if we have multiple configuration classes we can use @Import annotation to import other configuration classes inside another configuration class
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/bce9973f-abf9-4e04-a3cd-36aacf97a7fd)
