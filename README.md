@@ -227,3 +227,33 @@ A Repository Containing a Summary of Pro Spring 6 book
 * you notice that a @PropertySource annotation is used to access a properties file. this annotation is used to load properties files into spring ApplicationContext which accepts location as it's argument. several locations can be provided
 * also if we have multiple configuration classes we can use @Import annotation to import other configuration classes inside another configuration class
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/bce9973f-abf9-4e04-a3cd-36aacf97a7fd)
+### Profiles
+* a profile instructs spring to configure the ApplicationContext in a specific way
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/70d1f528-08bf-4797-bf0e-e9c75054629b)
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/543a5883-f1e5-4172-b6d2-e89fb7543aa0)
+* in the code snippets above we have two implementation of an interface in different packages with different profiles set for each
+* by passing "-Dspring,profiles.active=..." to the JVM when running our stand alone spring app we can tell which profile to use to configure the context. in this example by passing the value "highschool" that implementation is loaded and by passing the "kindergarden" the implementation is loaded into context<br />
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/d1b3136f-3e25-43fd-8aa9-740fee763473)
+* in the code snippet above the active profile can be either set from JVM argument like i mentioned before or it can be read from environement variables or .properties files
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/2b1fbff1-3fb8-4ab1-ab55-611611aa1a17)
+* in this one the context is first created empty and after the profile is read it is filled by configuration classes and afterwards it is filled by the desired bean
+* this mechanism enables developers to manage application runtime environment and configuration and it used to be done by build tools that packaged the profile alongside the JAR or WAR files which meant each environment had it own packeged files
+* but by using this mechanism we can create multiple profiles and have it be set according to the desired environment
+* but it has drawbacks like bundling this data would be error prone and making out packages a little bit bigger
+### Environment and PropertSource Abstraction
+* the Environment Bean (ctx.getEnvironment()) we saw earlier doesn't just control the profile but also the properties that hold the environment configuration
+* by using hte abstraction we can access all the environment , system and application properties which are populated when ApplicationContext is bootstrapped
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/7f859d5f-0166-4fac-8c29-210de8d9eb3d)
+* we put the properties in a map and then in a MapPropertySource implementaion of PropertySource which reads the key/value pairs and the put inside a MutablePropertySources which is a default implmentation of PropertySources and enables manipulation of existing propertSources
+* spring accesses the properties in following order: 1- system properties for the running JVM 2- Environment variables 3- application defined properties
+* spring environment is seperate from system properties and contains all the properties that were mentioned above. when we call System.getProperty() only the system properties are checked but when we call env.getProperty() all three property environment are checked in the mentioned precedence. so if a property is set in a higher level that will be shown
+* however if we use the addFirst() method opposite to addLast() method this precedence will change when calling env.getProperty()
+* as a side note we can read a property using the @Value(${property.name}) and inject to a variable or use @PropertySource on a config class, autowire an Environment object and pass it the required properties
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/83b422cd-cb80-4022-9eed-9dc6f9ce69bf)
+### Testing Spring Applications
+* testing is a prowerful practice and tool that enables us to ensure that our code works the way it was inteded to. when we are chaning our code it is the only that gives us the high enough confidence that our code is still the working the way it should after these changes
+* what different kinds of test are and how to achieve TDD is out the scope of this book but it is encourged to read about them
+* in here we are going to discuss how to test spring application
+* spring offers a meriad of annotations that help us in testing our applications which we'll see the importatn ones during our time talking about testing
+
+
