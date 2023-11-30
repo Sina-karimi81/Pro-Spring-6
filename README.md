@@ -254,6 +254,17 @@ A Repository Containing a Summary of Pro Spring 6 book
 * testing is a prowerful practice and tool that enables us to ensure that our code works the way it was inteded to. when we are chaning our code it is the only that gives us the high enough confidence that our code is still the working the way it should after these changes
 * what different kinds of test are and how to achieve TDD is out the scope of this book but it is encourged to read about them
 * in here we are going to discuss how to test spring application
-* spring offers a meriad of annotations that help us in testing our applications which we'll see the importatn ones during our time talking about testing
-
-
+* spring offers a meriad of annotations that help us in testing our applications which we'll see the important ones during our time talking about testing
+* by using the *spring-test* module alongside junit library (TestNG , Mockito , etc) we can test application's behavior
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/85ee407d-1090-4243-91ac-b20f6eb87964)
+* notice that we used the Mockito framework to mock a behavoir of MessageProvider class ( Mockito is a great tool when you only want to test the code and don't need to actually connect to a database/server or read a property value and want to return a specific value from them )
+* the ApplicationContext of test is apart from the ApplicationContext of the main program should it also should be created in our test classes
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/b731fb9b-2677-4f65-8f8c-282b2c4ca216)
+* as you can see the test context is created manually by specifying the configuration files
+* in order to access the beans we need and avoid duplicating the code above in every test method we can use the @BeforeAll annotation from jupiter library (aka Junit 5). when a test is run a method marked with this annotation is excecuted once but won't be excecuted other times the tests are run
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/28c4bea7-bdb7-4b2a-aa33-c3ac278cb9fb)
+* but we can also avoid manually creating the ApplicationContext and use @ContextConfiguration and @ExtendWith annotations to create the context automatically or the get them both at once @SpringJunitConfig
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/e0e5a843-aed0-42c9-bcfe-86a5b52a6942)
+* as you know we can use @Profile on a bean definition to make a bean active in a certain environment. other than that we can use profiles on test classes or methods to make them in active in certain environments. to make a class active for a specific profile we will use @ActiveProfile
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/4d05faa6-6f7a-417e-bade-aae4057a0a0b)
+* in the snippet above, the MessageProvider beans in configured to return a specific message in test profile and the test class is also configured to be run in test profile
