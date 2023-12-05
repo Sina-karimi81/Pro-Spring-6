@@ -268,3 +268,46 @@ A Repository Containing a Summary of Pro Spring 6 book
 * as you know we can use @Profile on a bean definition to make a bean active in a certain environment. other than that we can use profiles on test classes or methods to make them in active in certain environments. to make a class active for a specific profile we will use @ActiveProfile
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/4d05faa6-6f7a-417e-bade-aae4057a0a0b)
 * in the snippet above, the MessageProvider beans in configured to return a specific message in test profile and the test class is also configured to be run in test profile
+
+## Spring AOP
+* another one of spring's core feature is the support of AOP programming and implmenting cosscutting concers
+* Crosscutting concerns are parts of a program that spread across other parts, making them hard to separate out. This can cause the same code to show up in many places and make different parts of the program too dependent on each other.
+* by modularizing this pieces of code,known as concerns, by using AOP we can apply them to many parts of the program without any duplication and coupling
+* Logging and security are often the main reasoons of using AOP
+* it is worth mentioning that AOP and OOP comlete eachother and we cannot code an entire application using AOP
+### AOP Concepts
+* *joinpoints*: A joinpoint is a specific moment in your program, like when a method is called or when an object is created. It’s the place where we can add extra steps or actions in our program using AOP.
+* *advice*: the code that is inserted by aop and executed at a particular joinpoint is called an advice
+* *pointcut*: Think of a pointcut as a set of rules that decides which spots in your program, like when a method is called or an object is made (joinpoints), should get some additional instructions (advice). It’s like marking certain pages in a book where you want to add notes. By creating pointcuts, you basically organize where these notes (advice) should go in your app.
+* *aspects*: An aspect is like a bundle that contains both the extra instructions (advice) and the rules for when to apply them (pointcuts), all wrapped up into a single class. This class tells your program what new actions to do and exactly when to do them.
+* *weaving*: the process of combining the aspect and the code together. can be done at compile-time, run-time and load-time (by intercepting the JVM when its loading the classes)
+* *target*: an object that is modified by an AOP process is called the target object
+* *introduction*: this is a special kind of aop that enables us to add additional fields and methods to class without changing the class itself
+### Types of AOP
+* Static AOP: the weaving process is done as another step in building the application and the additional logic is added by modifying the bytecode. this is type has great performance because the end result is a java bytecode and is feature rich since it has been around for a long time but any changes to the aspect needs a recompile
+* Dynamic AOP: the weaving process is done dynamically at runtime, different AOP providers implement it differently but in spring it is done by using proxies which we'll discuss a bit further. it lacks a bit in performance part but has the advantage of not needing a recompile after each change
+* these two types often complement eachother and can be used together and not together. it is up to you
+### Spring AOP Architecture
+* Spring AOP can be split into two logical parts: 1- it's core programmatic functionality aka Spring AOP APi 2- a set of framework services that make AOP easier to use
+* other components of spring such as Transaction management use AOP to simplfy development
+* as we said spring uses proxies. an advised instance of a class is a result of ProxyFactory class creating a proxy instance of the target class that contains all the aspects weaven into it
+* we can approach aspect creation programmatically using ProxyFactory class, or declarative proxy creation such as annotations and xml files and after a proxy is created, it is called instead and delegates the calls to the target object
+* spring uses two proxy implementation: 1- JDK dynamic proxies which are used when the target object implements an interface because it only supports proxy creation for interfaces 2- CGLIB proxies which are used for concrete classes
+* spring AOP only supports method invocation joinpoint which is the most useful
+* in spring an aspect is represented by a class that implements the Advisor interface and spring provides many implementations and we can also create our own custom implementations
+* there two other interfaces that extend Advisor: 1- PointcutAdvisor for implementations that use pointcuts 2- IntriductionAdvisor for classes that introduction applies
+### ProxyFactory Class
+* ProxyFactory class controls the weaving and proxy creation process. internally ProxyFactory deleggates teh proxy creation to an instance of DefaultAopProxyFactory class which in turn delegates to CGLIB or JDK dynamic
+* we can set the target class using the setTarget() method and set advices using addAdvice() method. when we use the addAdvice() the given advices are appplied to all the methods of the target class
+* if we need more control over the advice we can create an advisor and pass to the ProxyFactory using the addAdvisor() method
+* there are ofcourse remove counterparts as removeAdvice() and removeAdvisor() and to check if a advice is passed before we use the adviceIncluded() method
+* there are 6 advices in spring:
+    - Before: applies logic before a joinpoint is executed. the advice has full access to the target of the method invocation and the arguments passed to the method (which it can change or throw an exception) as well. if an exception occurres in the advice the whole process is reverted and the method is not executed. one the most powerful advices which is normally used in application security processing
+    - After returning: executed after a joinpoint has finished execution and returned a value.the advice has full access to the target of the method invocation and the arguments passed to the method and return value. if an exception occurres in the target method the advice is not executed and suprisingly we cannot modify the retun value
+    - After: executed no matter the result of the target method and even if an exceptio happens
+    - throws: executed after a method throws an exception, the advice has full access to the target of the method invocation and the arguments passed to the method and threw exception. we cannot ignore the exception that was thrown and return value instead. all we can do is to change the type of exception. this can be helpful in reclassifying our exception hierarchy and logging
+    - Around: executed before and after a method invocation and we can control of the method is called at all or not. reflection is used to call the intercepted method. it enables us to modify the return value and prevent the execution of a method
+    - Introduction: they are modeled as a special type of interceptors and we can specify teh implementation for methods that are being introduced as advice
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/e0efb416-2d0f-42e6-80e5-087f73a36947)
+* this is an example of manually creating and adding advices
+* beware of choosing the right and specific type of advice that you need and don't go over board by using around advice all the time since it can be error prune and take more memory space
