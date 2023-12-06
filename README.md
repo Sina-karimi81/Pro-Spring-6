@@ -1,5 +1,5 @@
 # Pro-Spring-6
-A Repository Containing a Summary of Pro Spring 6 book
+A Repository Containing a Summary of Pro Spring 6 book. please beware that these are personal notes and understaing of the text so don't solely on them
 
 ## Introducing IoC and DI in Spring
 * Spring was built to be a dependency injection framework
@@ -310,4 +310,35 @@ A Repository Containing a Summary of Pro Spring 6 book
     - Introduction: they are modeled as a special type of interceptors and we can specify teh implementation for methods that are being introduced as advice
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/e0efb416-2d0f-42e6-80e5-087f73a36947)
 * this is an example of manually creating and adding advices
-* beware of choosing the right and specific type of advice that you need and don't go over board by using around advice all the time since it can be error prune and take more memory space
+* beware of choosing the right and specific type of advice that you need and don't go overboard by using around advice all the time since it can be error prune and take more memory space
+### Advisors and Pointcuts
+* as we said earlier when we creat an aspect usign ProxyFactory class the advice is applied to all the methods which okay if we are usign the advice for logging purposes but not good if we want it to apply to specific methods only
+* one way would be to check for the desired method in the advice, but this would be hard coding the methods and removes the element of reusability from the advice and the check that occurres each can become a performance issue
+* by using pointcuts we can configure which methods the advice applies to and remove the hard coding part also when a method is called for the first time the applicability of advice is checked by the pointcut and the result is cached. other than this spring optimizes the unadvised methods when creating the proxies to have faster invocations
+* there is term called target affinity which is used to describe the coupling and correctness between the advice and the target object
+* in general if the target affinity is low enough we can use pointcuts (can be applied to a wide range of types) otherwise it is suited to hard code the logic
+* to make pointcut we can implement the Pointcut interface that has two methods: getClassFilter(): ClassFilter and getMethodMatcher(): MethodMatcher , in most cases it is not neccessary since spring provides default implementations that we can use
+* the getClassFilter() method checks whether the pointcut applies to the methods's class and the getMethodMatcher() checks whether the pointcut applies to the methods itself or not
+* MethodMatcher interface has three methods: matches(Method , Class) , isRuntime() , matches(Method , Class , Object[]). isRuntime() checks whether MethodMatcher is dynamic or static which then determines which match() to use (as said before the results of all these are cached so not to be called again)
+* when the pointcut is static the first matches() is used for every method of the target. if the pointcut is dynamic the first matches() is called to check the overall applicability, the second matches() is called for each invocation of the method to see if the pointcut should be applies or not based on the4 invocation
+* obviously the static pointcut has better performance but in stuations where the adviec has a massive overhead it is better to use the dynamic pointcut
+* spring provides many pointcut implementations:
+    - AnnotationMatchingPointcut: looks for specific annotations on a class or method
+    - AspectJExpressionPointcut: uses AspectJ weaver to evaluate a pointcut expression in aspectJ syntax\
+    - Composablepointcut: used to compose two or more pointcuts together using operations such as union() and intersection()
+    - ControlFlowPointcut: a special case pointcut that matches all the methods inside the controlFlow of another method, that is any method that is called directly or indirectly as the result of another method being called
+    - DynamicMethodmatcherPointcut: used as the base class for building dynamic pointcuts
+    - JdkRegexpMethodPointcut: allows for define pointcuts using regex expressions
+    - NameMatchMethodPointcut: we can create a pointcut that performs a simple name check on a list of method names
+    - StaticMethodMatcherPointcut: used as the base class for building static pointcuts
+* for our examples we'll use the DefaultPointcutAdvisor which associates a single pointcut to a single advice
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/5bb167c8-cb26-473b-a28d-736b9816a2f6)
+* in this example we made an around advice that only works on the sing() method of the GoodGuitarist class. the getClassFilter() retuns the GoodGuitarist.class so that the methods of this class are matched only and as you can see because both classes implement the same interface, proxies can be created based on the interface from a single DefaultPointcutAdvisor
+* and now for the Dynamic pointcut creation
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/1682fa7e-6112-4027-94d2-5459478683c2)
+* to use this pointcut we needed a method with arguments so we created a default method in the Singer interface as not to change the implementation of the classes
+* we override the getClassFilter() same as before as to remove the checking of class the method-matcher methods
+* it is true that the dynamic check is only one we nned but we still implement the static check method-matcher as well as to stop the dynamic check if the method signature (i.e the name in here) didn't match the desired method
+* we configured the dynamic matcher method in a way that the method is advised if only the input us "C" so the first two invocations of sing() are advised in this example
+* an intersting thing is that the sing(key) method is subject to two static checks. one for the initial phase when all methods are checkd and one for when it is first invoked
+
