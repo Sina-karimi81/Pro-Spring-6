@@ -265,7 +265,7 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/28c4bea7-bdb7-4b2a-aa33-c3ac278cb9fb)
 * but we can also avoid manually creating the ApplicationContext and use @ContextConfiguration and @ExtendWith annotations to create the context automatically or the get them both at once @SpringJunitConfig
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/e0e5a843-aed0-42c9-bcfe-86a5b52a6942)
-* as you know we can use @Profile on a bean definition to make a bean active in a certain environment. other than that we can use profiles on test classes or methods to make them in active in certain environments. to make a class active for a specific profile we will use @ActiveProfile
+* as you know we can use @Profile on a bean definition to make a bean active in a certain environment. other than that we can use profiles on test classes or methods to make them in active in certain environments. to make a class active for a specific profile we will use @ActiveProfile<br />
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/4d05faa6-6f7a-417e-bade-aae4057a0a0b)
 * in the snippet above, the MessageProvider beans in configured to return a specific message in test profile and the test class is also configured to be run in test profile
 
