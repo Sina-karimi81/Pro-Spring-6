@@ -1,5 +1,5 @@
 # Pro-Spring-6
-A Repository Containing a Summary of Pro Spring 6 book. please beware that these are personal notes and understaing of the text so don't solely on them
+A Repository Containing a Summary of Pro Spring 6 book. please beware that these are personal notes and understaing of the text so don't solely rely on them
 
 ## Introducing IoC and DI in Spring
 * Spring was built to be a dependency injection framework
@@ -341,4 +341,39 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 * it is true that the dynamic check is only one we nned but we still implement the static check method-matcher as well as to stop the dynamic check if the method signature (i.e the name in here) didn't match the desired method
 * we configured the dynamic matcher method in a way that the method is advised if only the input us "C" so the first two invocations of sing() are advised in this example
 * an intersting thing is that the sing(key) method is subject to two static checks. one for the initial phase when all methods are checkd and one for when it is first invoked
+* sometimes we just want to match our pointcut given it's name and ignore all the other details. in these cases we can use _NameMatchMethodPointcut_ to mathc the given method name to a list of names.
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/8faf21f4-ec1f-49b0-8382-cccab53a00d0)
+* as seen in the example above we created and instance of _NameMatchMethodPointcut_ (there is no need to subclass it) and given it a list of methods that we want to be advised. so both the sing() and rest() methods are advised but talk() is not
+* for all _Pointcut_ that are implmented spring, spring also has a convenience advisor class as well that simplifies the advice creation
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/583f20e0-2b97-4bca-a3a1-b2f9c7ab746b)
+* instead of using the _NameMatchMethodPointcut_ and _DefaultPointcutAdvisor_ we can the _NameMatchMethodPointcutAdvisor_ and use it's constructor and setmappedNames() method to pass the advice and the list of method names respectively
+* however there are situations where we don't know all the details to a class like it's methods name or signature. here is where we can use regex and _JdkRegexpMethidPointcut_ class
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/ba31841a-1179-485c-a007-7ad784460058)
+* here we have used a regex to mark every method that starts with a sing to be advised
+* an intersting thing is that sring uses methods full name (i.e com.apress.prospring6.five.common.Guitarist.sing1) to match the methods to pointcuts which why there is a .* following the sides of the sing word in the regex input of setPattern() method (to be honest no developer, no matter how skiled and years of working can understand or write regex on their own!!! so i am only saying what the book says in this part)
+* this is a powerful mechanism that allows us to mark the methods of a package that can be third party or legacy which we don't know much about as advised methods
+* another way would be to use the AspectJ pointcut expression language which is similar to regex to mark our advised methods and _AspectJExpressionPointcut_ class which is the best way to go since it is very flexible and concise
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/bf6c68b0-ca4f-4271-a280-52e24bde4543)
+* by using the srtExpression() method and passing in "excecution() * sing*(..))" we tell it to mark all the methods that start with the word sing (just regex, aspectJ expressions are things that you have to search all the time) have any argument and any return type
+* so using AspectJ pointcut expresssion we can event filter the methods based on the arguments and return types which we couldn't do using regexes
+* if we want to use a custom annotation to mark our methods we can use the _AnnotationMatchingPointcut_ class 
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/abce66f5-95a4-4ce9-9878-07595b5a685a)
+* so in here we used the AnnotationMatchingPointcut.forMehtodAnnotation() method to give the annotations that mark the methods to advised. there is also a AnnotationMatchingPointcut.forClassAnnotation() that is used for annotations tha mark a class level
+### Understanding Proxies
+* we mentioned previously that spring uses JDK Proxy class and CGLIB to create proxies of the target class. now we are going to dive deeper and see what their difference actually is
+* the core goal of proxy (read about the proxy design pattern!) is to intercept the calls that are made to the target object and if an advice is applied to them, pass them to spring AOP framework for the advices to be invoked (so the advices are managed and invoke by spring aop and proxies only intercept the calls and invoke the actual method after advice completion)
+* proxies can be configured to expose themselves so we can retrieve and invoke their advised methods via the AopContext. the proxy class is responsible for this exposing. additionally all proxt classes implement the _Advised_ interface so the advice chain can be changed after the proxy is created and finally a proxy must make sure that if a method returns _this_( the proxy object itself) the actual proxy object is returned not the target object
+* JDK proxy can only generate proxies from interfaces, so our target objec must imnplement at least one interface
+* when using the JDK proxy, all the methods are intercepted JVM and passed to the invoke() method of the proxy object. invoke() checks whether the method is advised or not, if it is the advised are called and after that the actual method using reflection, if not the actual method using reflection
+* as you may have noticed the JDK proxy doesn't make a distinction between advised and unadvised methods until they are inside the invoke() method. so there is a performance overhead
+* in JDK proxies all the decisions on how to handle a method are handled at runtime but in CGLIB since it dynamically generates a bytrcode. (the created class is a subclass of the target object and CGLIB reuses code from the target whenever possible)
+* when the CGLIB proxy is created, it asks spring how to handle the each method, this many of the decisions are handled only once contrary to JDK proxies
+* since CGLIB generates bytecode it is more flexible on ow to handle each method, for example for unadvised methods, it generates appropriate code for them to be called directly, so reducing the overhead
+* also they also determine whether it is possible for a method to return _this_, if not the method is allowed to be called directly
+* CGLIB also handles fxed-advice chain (an advice chain that we guarantee is not going to change after proxy creation) differently and reducing their runtime overhead
+* but poxies created by CGLIB have the limitations that normal subclasses do
+* performance wise the difference between CGLIB and JDK proxy are not that much both for advised and unadvised methods. the only noticable difference is for when we use the frozen chain in CGLIB
+
+
+
 
