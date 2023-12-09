@@ -373,7 +373,38 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 * CGLIB also handles fxed-advice chain (an advice chain that we guarantee is not going to change after proxy creation) differently and reducing their runtime overhead
 * but poxies created by CGLIB have the limitations that normal subclasses do
 * performance wise the difference between CGLIB and JDK proxy are not that much both for advised and unadvised methods. the only noticable difference is for when we use the frozen chain in CGLIB
-
-
-
-
+### Advanced Use of Pointcuts
+* ControlFlow Pointcut applies to all the method calls below a given method or below all methods in a class (inside the proxy object ofcourse, if the method is not part of the proxy object or the traget object for that matter, it will not be advised), basically when we want to advice a method if it was called by another method
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/d56bb3f0-dda8-4518-9d51-f215c962c6c0)
+* in this example we are telling the ControlFlow Pointcut to advice all the methods that are called from the ControlFlowDemo.test() method
+* notice that when we call the foo() method directly nothing happend but when it is called from the test() method it is advised
+* ControlFlow Pointcut is extremely useful but it has a substantial performance overhead
+* in our examples so far we haev advised only a single pointcut for a advisor which is good enough for most situations but there can be times where we have multiple pointcuts that we want to advice that's were we can use the Composable pointcut
+* _ComposablePointcut_ has two methods: 1- union() (think of it as the OR operation like the ones in SQL) 2- intersection() (think of it as the AND operation like the ones in SQL), both these methods accept either an instance of ClassFilter, MethodMathcer or Pointcut interface.they add theire respective conditions to the call cahin for matching with joinpoints
+* by default _ComposablePointcut_ is created to mathc all calsses and all methods but we can configure them and overridw the union() and intersection() to work with new classes and methods
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/cc59f17f-40de-48ae-8e95-f021e73b8733)
+* at first our target object is advised for every method that start's with the words "si" using the _SingMethodMatcher_ class
+* then it is unioned with the _TalkMethodMathcer_ class. this means that advise methods that either start woth "si" or have a signature of "talk"
+* for the final part an intersection is used with _RestMethodMatcher_ class. this means that advise methods (that either start woth "si" or have a signature of "talk") and (methods that end with the words "st"). no mathod has both these conditions hence no method is advised
+* the saame can be done for the ClassFilter as well
+* there is another way ot create composite pointcuts and that is usng the _Pointcut_ class which bt itself provides the union() and intersection() methods and it provides a matches(Pointcut , Methhod , Class , Object[]) to check whether a pointcut mathces with the given arguments however it only supports these operations for only two pointcuts so if you need to combine _MethodMatcher_ and _ClassFilter_ with _Pointcut_, you should use _ComposablePointcut_
+* we've seen all the pointcut implementations that spring offers, and if non of them suit your need you can always implements custom one. there are two patterns to combine pointcuts and advisors, we have seen and worked with the first pattern so far
+* the second pattern which adopted by many spring documentation examples is to encapsulate the pointcut inside the Advisor implementation. this way we have a class thta implements both the _Pointcut_ and _PointcutAdvisor_ with _PointcutAdvisor.getPointcut()_ returning _this_
+* the first pattern is more flexible however teh second pattern is useful when we want to use the same combination of pointcuts and advisors in different parts of the application and when each advisor must have a seperate intance of a pointcut
+### Getting started with Introductions
+* by using Introductions we can introduce new functionality to an existing class dynamically, in spring it is an implementation of any interface to an object
+* this functionality is usually crosscutting and is not easily implemented usong traditional advices
+* spring treat Introcutions as a special type of around advice and because they apply at the class level we cannot use pointcuts with them since introductions add the implementation of a class and pointcuts mark methods to be advised
+* we can create an introduction by implementing the _IntroductionInterceptor_ interface which has a single invoke() method. since implementing methods in a single method can be error prune and difficult we opt to instead extend the _DelegatingIntroductionInterceptor_ class which is an implementation of _IntroductionInterceptor_
+* our desired class, extend the _DelegatingIntroductionInterceptor_ class and implements the interface we want to introduce. the _DelegatingIntroductionInterceptor_ class then delegates all the calls to introduced methods to the corresponding method itself
+* we add the Introduction by using the _ProxyFactory,addAdvisor()_ method
+* as you know we can pass a single instance of advice to multiple classes this called per-class life cycle however this not true for introductions since they share state with classes are applied so every class or object must have a distinct instance of Introduciton. this is called oer-instance life cycle
+* in our example we are going to implement an object modification detection framework. object modification detection is technique to make sure that the data we want to persist is actually modified and avoid unnecessary database access
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/8c2c5f2c-4b1b-4dd7-8d21-48ec17d1b45f)
+* the tern **mixin** is referred to class that implements the desired interface and is introduced to the target objects
+* another thing here is that the _IsModifiedMixin_ class has both method and state that it shares with the target object again noting why it is important to have different instances of Introductions
+* we don't have to implement the invoke() method but in here it enables us to detect when a modification occurs.
+* we only check when the object is not modified, then we check to see if the method is a setter method or not, if it is we retrieve the corresponding getter method and using that weh check whether the argument passed to the setter is different from the current value of the variable
+* it is important to note that we should always call the super.invoke() when overriding invoke() since it is the _DelegatingIntroductionInterceptor_ class that handles the correct invocation
+* another important note is that when we are creating the proxy we set the optimize flag (pf.setOptimize()) to true to force the use of CGLIB proxy. because if JDK proxy is used the resulting class in not an intance of the _Object_ class, in other words the interfaces are only implemented and it is not a subclass of _DelegatingIntroductionInterceptor_
+* since there are no pointcuts used in junction with Introductions, all the methods of the proxy object are advised and this causes a performance overhead which can be neglected since we reduce the amount of code and the coupling needed to implemnent such logic
