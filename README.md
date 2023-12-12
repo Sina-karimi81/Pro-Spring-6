@@ -408,3 +408,22 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 * it is important to note that we should always call the super.invoke() when overriding invoke() since it is the _DelegatingIntroductionInterceptor_ class that handles the correct invocation
 * another important note is that when we are creating the proxy we set the optimize flag (pf.setOptimize()) to true to force the use of CGLIB proxy. because if JDK proxy is used the resulting class in not an intance of the _Object_ class, in other words the interfaces are only implemented and it is not a subclass of _DelegatingIntroductionInterceptor_
 * since there are no pointcuts used in junction with Introductions, all the methods of the proxy object are advised and this causes a performance overhead which can be neglected since we reduce the amount of code and the coupling needed to implemnent such logic
+### Framework Services for AOP
+* up until now we have been advising objects programmatically which is not bad by itself but it causes all the configuration to be hardcoded, luckily spring provides framework services that enables us to create advised proxies declaratively alongside using DI and AOP at the same time
+* in this book we are going to work with _ProxyFactoryBean_ and @AspectJ-style annotations to achieve this, there is also an option of using spring aop namespace which we are not going to cover
+#### ProxyFactoryBean
+* the _ProxyFactoryBean_ class is an implementation of _FactoryBean_ that allows us to specify a target bean and provides a set advice and advisors for the target bean which are eventually merged into an AOP proxy
+* this class applies interceptors before and after each method that is marked using the pointcuts that weconfigured in it to be executed before and after methods
+* it also shares a common interface (_Advised_) with _ProxyFactory_ and as a result exposes many of the flags we've seen before e.g **frozen** , **optimize** , **exposeProxy**
+* we simply define a bean to be passed as the proxy target, it is better to pass the target bean as anonymous object to prevent the application from accessing the unadvised object but there are always exceptions like the example we are going to provide
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/a61e5671-99f1-4c00-9279-f812784fed58)
+* we create two prxoies, one will be advised directly so all methods are advised in the target bean and in two we will use _AspectJExpresssionPointcut_ and _DefaultPointcutAdvisor_ to only advice the sing() method
+* the first thing to notice is that the pointcut is not a bean but a simple pojo that is set on the advisor bean since right now it is not needed to be shared
+* the second one is that the prxoies created by the _ProxyFactoryBean_ are fulfilling the dependencies of our application and if you the unadvised object we need to go around the AOP context. although youre application must not know about the AOP context to begin with, that why i said earlier to pass the target bean as anonymous object
+* we can also use _ProxyFactoryBean_ for Introductions and the rules are the same as I mentioned in the Introduction section
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/6f4a3f7c-90ae-4216-91d4-d437a19ca602)
+* the example yields the same output as the previous example we used for Introduction
+#### @AspectJ Style Annotations
+* as of JDK 5 we can use annotations to advice our methods, however spring still uses its own proxying mechanisms for advising the target bean not AspectJ's weaving mechanism
+* in this section we are going to implement the same examples using the AspectJ style annotations
+* 
