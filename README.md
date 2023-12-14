@@ -1,4 +1,4 @@
-# Pro-Spring-6
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/7c5f2a0a-0943-4539-acd0-d9bb7f86518e)# Pro-Spring-6
 A Repository Containing a Summary of Pro Spring 6 book. please beware that these are personal notes and understaing of the text so don't solely rely on them
 
 ## Introducing IoC and DI in Spring
@@ -426,4 +426,34 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 #### @AspectJ Style Annotations
 * as of JDK 5 we can use annotations to advice our methods, however spring still uses its own proxying mechanisms for advising the target bean not AspectJ's weaving mechanism
 * in this section we are going to implement the same examples using the AspectJ style annotations
-* 
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/9dfba5d0-08a0-4fa9-8cba-f434d40c5579)
+* these are the beans we are going to use
+* we are going to start with a simple Before advice. when using annotations we don't need to declare the pointcut since the annotation itself accepts the pointcut as an attribute
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/e6063ab3-2310-4aa4-ad36-5037ef358a47)
+* this way we don't need to implement the _MethodBeforeAdvice_. another thing is the use of @Aspect to mark our class as an aspect class which groups together the advice declarations, pointcuts and other utilities
+* the @Before annotation marks the method as a before advice which accepts a pointcut expression that means we want to advice all the methods that start with "sing", under the package of com.apress.prospring6.five( .. represents all the subpackages ). also the sing* should receive one argument of type Guitar
+* the method accepts a _JoinPoint_ as an argument not the method, object or the arguments passed to the target method. we can use this class to access the information of the target. this argument is optional. if we define it for a method spring will autimatically pass to it the method
+* we use the configuration class below to detect beans and classes marked with @Aspect
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/cc992aaf-b437-4817-82ff-c48aa664c88c)
+* the @EnableAspectJAutoProxy annotation in configuration classes is what enables support for aspect classes, the proxyTargetClass flag indicates the use of CGLIB to create proxies or not
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/28da0ee5-0ca8-4a30-9dc0-1929e8c2aa52)
+* the test method creates an application context based onf the configuration class and adds the aspect bean defined by the _BeforeAdviceV1_ class. if the context is created the execute method is runned and we can see the advised output
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/62f3ccf4-449b-411e-86cf-2ffb89aa4601)
+* in this version, the pointcut is declared using the @Pointcut annotation on a method that must return void and can accept arguments, then the method is used in the advice annotation. this helps with reusing the pointcuts over and over without code duplication. the output is the same as before.
+* we can compose aspects together as well like the example below
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/3dd2895e-54b2-4adb-ab50-5b5a314d5114)
+* here we've said that in addition to previous conditions, the target bean's name must start with "John". hence the new @Pointcut and the "&&" operator. the ouput is identical to previous examples
+* we can also modify the advice to do some checks on the arguments of the method being advised aswell
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/869d1f56-60ed-4242-aab8-65f668b46a20)
+* notice the pointcut expression has the name of the arguments. it must have the same name as the method's arguments and the same order
+* now we move on to around advice
+* the annotation used is @Around and the method in works with has the type of _ProceedingJoinPoint_ since this type has to have the possibility of calling the actual target method
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/ba3cd438-d7eb-4f29-bba0-b0ca2c7399d0)
+* this example simply prints a message before and after the method is called. everything else is the same as the @Before example we had before
+* lets use the argument of the method aswell. to see the invocations we extend the _NewDocumentarist_ and change the brand of the guitar
+![Uploading Pro Spring.png…]()
+
+
+
+
+
