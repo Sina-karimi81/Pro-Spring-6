@@ -1,4 +1,4 @@
-![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/7c5f2a0a-0943-4539-acd0-d9bb7f86518e)# Pro-Spring-6
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/f073c6b0-81bd-4b9c-85e2-54d8230e8a6a)# Pro-Spring-6
 A Repository Containing a Summary of Pro Spring 6 book. please beware that these are personal notes and understaing of the text so don't solely rely on them
 
 ## Introducing IoC and DI in Spring
@@ -438,22 +438,45 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 * the @EnableAspectJAutoProxy annotation in configuration classes is what enables support for aspect classes, the proxyTargetClass flag indicates the use of CGLIB to create proxies or not
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/28da0ee5-0ca8-4a30-9dc0-1929e8c2aa52)
 * the test method creates an application context based onf the configuration class and adds the aspect bean defined by the _BeforeAdviceV1_ class. if the context is created the execute method is runned and we can see the advised output
-![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/62f3ccf4-449b-411e-86cf-2ffb89aa4601)
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/7c5f2a0a-0943-4539-acd0-d9bb7f86518e)
 * in this version, the pointcut is declared using the @Pointcut annotation on a method that must return void and can accept arguments, then the method is used in the advice annotation. this helps with reusing the pointcuts over and over without code duplication. the output is the same as before.
 * we can compose aspects together as well like the example below
-![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/3dd2895e-54b2-4adb-ab50-5b5a314d5114)
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/62f3ccf4-449b-411e-86cf-2ffb89aa4601)
 * here we've said that in addition to previous conditions, the target bean's name must start with "John". hence the new @Pointcut and the "&&" operator. the ouput is identical to previous examples
 * we can also modify the advice to do some checks on the arguments of the method being advised aswell
-![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/869d1f56-60ed-4242-aab8-65f668b46a20)
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/3dd2895e-54b2-4adb-ab50-5b5a314d5114)
 * notice the pointcut expression has the name of the arguments. it must have the same name as the method's arguments and the same order
 * now we move on to around advice
 * the annotation used is @Around and the method in works with has the type of _ProceedingJoinPoint_ since this type has to have the possibility of calling the actual target method
-![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/ba3cd438-d7eb-4f29-bba0-b0ca2c7399d0)
 * this example simply prints a message before and after the method is called. everything else is the same as the @Before example we had before
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/869d1f56-60ed-4242-aab8-65f668b46a20)
 * lets use the argument of the method aswell. to see the invocations we extend the _NewDocumentarist_ and change the brand of the guitar
-![Uploading Pro Spring.png…]()
-
-
-
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/ba3cd438-d7eb-4f29-bba0-b0ca2c7399d0)
+* now let's go to After advice
+* there are three annotations we can use for after advice
+    - @After(finally): declares a advice that is executed regardless of the target method returning normally or throwing exception. typically used for releasing resources or sending notifications
+    - @AfterReturning: declares an advice that is executed after the target method returns normally
+    - @AfterThrowing: declares an advice that is executed only when the target method throws an exception
+* we are going to need a new implementation of Singer interface
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/6e2c075b-88e2-45c0-9508-870a715a1267)
+* we start with @After advice
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/fbeec2fb-b7d8-4bba-8990-a839598b1f9b)
+* notice that the after advice has access to the argument of the target method and can make use of it but it cannot access the exception being thrown
+* for the @AfterReturning and @AfterThrowing the code remains the same
+* there is something to note and that is that @AfterThrowing can intercept the exception thrown by the target method and replace it with a exception of another type unlike the other two after advices
+* @AfterThrowing advoce cannot prevent the exception from being thrown by the target method but it can replace the exception thrown by it
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/1186b7b5-30f3-437f-944b-641fe2a6a6fd)
+* we can also decare introduction using annotations aswell
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/e88ed6f5-6b78-4bf2-a167-66233d63c49f)
+* the interface to be implemented is determined by the type of the annotated field. teh calue attribute of the @DeclareParents is used to tell spring for what types the introduction must happen. any bean of matching type is wrapped in proxy that implements the _Performer_ interface abd introduces the behavior described by _Dancer_ class
+#### Aspect Instatiation Models
+* the @Aspect is not sufficient enough for auto detection, hence using the @Component. meaning the aspect classes are singleton beans
+* but there may be a scenario where we need more than one aspect bean to be created, such as one per target. this can be done via configuration done through the attribute that the @aspect annotation provides. this attribute can be initialized with an AspectJ expression configuring how many aspect beans should be created and when
+* ofcourse the spring configuration must be changed as well
+* to create an aspect bean for each target bean, the @Aspect  should receive as a parameter a pertarget expression pointing at the type of the intended target beans
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/d5722bbf-db27-4cd8-a427-ad4ed8a787fd)
+* an alternative is to use the perthis expression, pointing at the target method
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/97323fe5-8e5c-43da-b1d6-9c0a61f0fdf3)
+* so you might ask what is the difference between **perthis** and **pertarget**? the difference is represented by teh object being examined when an advised joinpoint is reached. **pertarget** specifies a type expression, whihc means a new aspect is instantiated for every new object that is the target of an advice. **perthis** specifies a method expression which means a new aspect is instantiated foe every new object referenced by **this** at the target advice
 
 
