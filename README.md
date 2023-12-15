@@ -1,4 +1,4 @@
-![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/f073c6b0-81bd-4b9c-85e2-54d8230e8a6a)# Pro-Spring-6
+# Pro-Spring-6
 A Repository Containing a Summary of Pro Spring 6 book. please beware that these are personal notes and understaing of the text so don't solely rely on them
 
 ## Introducing IoC and DI in Spring
