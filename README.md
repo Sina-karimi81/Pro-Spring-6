@@ -479,4 +479,52 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/97323fe5-8e5c-43da-b1d6-9c0a61f0fdf3)
 * so you might ask what is the difference between **perthis** and **pertarget**? the difference is represented by teh object being examined when an advised joinpoint is reached. **pertarget** specifies a type expression, whihc means a new aspect is instantiated for every new object that is the target of an advice. **perthis** specifies a method expression which means a new aspect is instantiated foe every new object referenced by **this** at the target advice
 
+## Spring Data Access with JDBC
+* now we are going to turn an importatn aspect of every program: data persisting and retrieval. almost every program needs to persist data to some sort of data store and tyhe most usual one is a database
+* in this chapter we will compare the traditional way of using JDBC and Spring JDBC, connecting to a databaseand how it is managed, retrieving and mapping records to java objects, CRUDs and testing JDBC code
+* java applications and databases cannot communicate directly and they need a translator to that for them, which is a software called a driver
+* there are three places where we might need a translator: 1- we ususally need the driver 2- if we want to introduce a persistence layer like hibernate we need two translators 3- if we add Spring Data to map records to POJOs we need three translators
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/014e87ad-340a-4c7b-aecc-b5effcec09bb)
+* these two are the entities that we are going to work with
+* we are going to start with a simple _SingerDAO_ (DAO means Data Access Object) to encapsulate all of the data access methods for singer
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/dbc558ef-1dde-4d66-af9e-6c25ef81d87f)
+* a java application needs a connection instance to communicate with a database, the _CoreDAO_ interface is simple interface that groups methods related to connection management: getting a connection and closing a connection
+### Exploring JDBC Infrastructure
+* JDBC provide a standard way for java apps r oaccess data stored in a databse . the core of this infrasturcture is a driver that is specific to each database
+* once a driver is loaded it registers itself with a _DriverManager_ class. this class manages a list of drivers and provides statis methods to get connections to the database using the drivers. the getConnection() method of this class returns a driver implemented _Connection_ interface which enables us to run SQL statements in the target database
+* the JDBC framework is quite complex and it comes with some development difficulty. the first level of this complexity is to make sure that our code manages the connections. a connection is an expensive resource to establish which puts a strain on the underlying database, making it slow if there are multiple concurrent openm connections
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/697efaa2-065c-4565-8b98-6abe46ddc3a8)
+* in our examples we are going to make a connection for every statement we are going to execute. this lacks performance but if we keep a connection open it will bring the database to a halt
+* any JDBC driver that palys the role of translator between java and SQL database must implement the _java.sql.Connection_ interface
+* to check if a driver is present in our classpath we can do the following
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/9cb9aa20-83c4-457e-97b5-4c33e078e7b7)
+* here we are tying to see if we have a driver for MariaDB
+* now we are going to see an implementation of the findAll() , insert(..) and delete(..) methods of SingerDAO
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/c3382afa-3edc-4c83-a7b0-85950306b8f6)
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/b5f88b8f-ca4f-46a5-a5db-4c47c745eb1a)
+* you can clearly notice the amount of code needed to make sure a connection to the database can be used and checking the SQLException that might be thrown. in earlier version the _Connection_ interface didn't implement _AutoClosable_ so there would have been more boiler plate code and code duplication as well since there would have been a need for many helper methods leading to more bugs being introduced
+* this is where DAO framework and spring come in
+### Spring JDBC Infrastructure
+* the spring jdbc support is devided in five packages:
+    - jdbc.core: this package contains the foundations of JDBC classes in spring such as _JdbcTemplate_ class
+    - jdbc.datasource: contains helper classes and DataSource implementations to that we can use to run JDBC code outside JEE container
+    - jdbc.object: contains classes tha help convert the data returned from DB to objects or a list of objects
+    - jdbc.support: contains the SQLException class for SQL to java translation support
+    - jdbc.config: contains classes that support JDBC configuration within Spring's ApplicationContext
+#### Database Connections and DataSources
+* we can use spring to manage the database connection for us by providing a bean that implements _javax.sql.DataSource_ . the differnce between DataSource and Connection is that DataSource provides and manages connections
+* _DriverManagerDataSource_ is the simplest _DataSource_ implementation. it simply calls the _DriverManager_ to get a connection. this class is mostly used for testing purposes. the configurations are usually read from a properties file for easy maintenance and different deployment environments
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/64c8cf84-2c22-459e-a11c-06ce2b32f4ed)
+* the tesitng is easy aswell. you just need to create a application context based on the configuration class
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/bb363b31-8fca-4831-9bab-2f61706fc5c3)
+* in real world applications we can use teh Apache Commons basicDataSource class or a DataSource implemented by the jEE application server (like JBoss, WildFly, ....). we can even use a DataSource in plain JDBC code, but in most cases we need a central place to configure teh DataSource. spring allows us to declare a DataSource bean and set teh connection properties in the application context definition files. (we can use the above mentioned implementations in a spring application managed app as well. e.g we can replace the _SimpleDriverDataSource_ with _BasicDataSource_ )
+* another way to configure a DataSource bean is to use JNDI. it would be like this
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/98b2ee8c-a0e4-4e56-ab76-89512582a870)
+* _JndiTemplate_ is a helper class that simplifies the JNDI operations
+* spring allows us to configure teh DAtaSource in almost any way and hides the actual implementation or location of the data source from the rest of the application. the connection management is also delegated to the data source bean
+#### Embedded Database Support
+* from version 3.0 spring supports embedded databse support, whihc automatically runs an embedded databse and exposes it as a DataSource for the application. this is extremely useful for local developement and testing. in the code below we'll see a minimal configuration for embedded H2 database
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/daeffd49-1dfe-4c72-8187-d2cbcf835227)
+* we gave it the daatbse and the creation scripts in order of DDL scripts first and then DML scripts.
+
 
