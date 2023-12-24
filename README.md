@@ -525,6 +525,39 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 #### Embedded Database Support
 * from version 3.0 spring supports embedded databse support, whihc automatically runs an embedded databse and exposes it as a DataSource for the application. this is extremely useful for local developement and testing. in the code below we'll see a minimal configuration for embedded H2 database
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/daeffd49-1dfe-4c72-8187-d2cbcf835227)
-* we gave it the daatbse and the creation scripts in order of DDL scripts first and then DML scripts.
+* we gave it the database and the creation scripts in order of DDL scripts first and then DML scripts.
+#### Using DataSources in DAO Classes
+* the DAO pattern is used to seperate data accessing api from the business services and layers
+* it consists of
+    - DAO interface which defines the standard operations
+    - DAO implementation which implements the defined operaitons
+    - Model objects (aka entities) that map database record to objects
+* we will create a _SingerDAO_
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/a9a5e5cd-f422-4a43-b50a-4796ee73da3f)
+* the interface doesn't need to know how the data is updated or retrieved, so the datasource is added in the implementation rather than the interface. it also avoids declaring getters and setters for stubs
+* now the the bean is created with the datasource property set to the datasource bean. to check it is set currectly we have used initializingBean and afterSetProperties() (refer to chapter 4)
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/04d87ef9-2a6c-4519-a39c-1504f7010a07)
+#### Exception Handling
+* spring advocates using runtime exceptions instead of checked exceptions so we need a mechanism to translate the checked _SQLException_ into a runtime exception
+* Spring provides a default implementation (_SQLErrorCodeSQLExceptionTranslator_ class) of the _SQLExceptionTranslator_ interface, which translates the generic SQL error codes into Spring JDBC exceptions (ofcourse you can implement your own translator)
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/cacb4bde-e75c-4389-8497-2693f72efbbf)
+* _DataAccessException_ is the root in the hierarchy of the data access runtime exceptions. extensions of this class provide info for real cause of an exception during data access
+* to use the _MariaDBErrorCodestranslator_ we have to stop using connections and instead wrap the datasource in spring's _JdbcTemplate_
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/f1a7ea2e-99d9-4d6c-b944-3949f7487698)
+* during execution of a statement if error code -12345 is encountered spring will use the transaltor we defined otherwise it  will use the default mechanism for translation. ofcourse we can create a bean of out translator and inject into a bean of _JdbcTemplate_
+### The JdbcTemplate Class
+* this class represents the core of spring JDBC and can execute all types of SQL statements and can return any type of result
+#### initializing _JdbcTemplate_ in a DAO class
+* queries e are going to use in from now on
 
-
+* this class needs to be created by passing the datasource object to it. it is generally a good practice to initializa teh JdbcTemplate within the same method where the data source object is injected by spring
+* JdbcTemplate is alos thread safe, meaning it can be created once and injected in all DAO beans
+* we'll refactor the _SingerDAO_ to use _JdbcTemplate_
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/38deb123-38d1-46b7-bd7a-0477f8ffc18f)
+* we have used the queryForObject() to retrieve the full name for a specific id. first the SQL string is passed, the the type of returned data and finally the parameters to a query which is a vararg. the ? (called a placeholder) marks the parameters that is needed by the SQL query
+* when using a placeholder the order of parameters is important and the order we put them in the varargs should be tha same as the palceholder
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/d7953576-d60d-4b4f-b7ba-837eda891b1b)
+#### using Named Parameters with _NamedParameterJdbcTemplate_
+* some develepors prefer to use a named paramters to specifically bound each parameter as intended. this is done through the _NamedParameterJdbcTemplate_ class an extension of _JdbcTemplate_ class
+* the initialization is the same as _JdbcTemplate
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/fddb625a-8e11-4422-8f40-859a8fbc946d)
