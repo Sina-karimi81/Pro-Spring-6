@@ -548,8 +548,8 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 ### The JdbcTemplate Class
 * this class represents the core of spring JDBC and can execute all types of SQL statements and can return any type of result
 #### initializing _JdbcTemplate_ in a DAO class
-* queries e are going to use in from now on
-
+* queries we are going to use in from now on
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/f4bcfc0f-8f2f-4d78-8794-a0a75d973a85)
 * this class needs to be created by passing the datasource object to it. it is generally a good practice to initializa teh JdbcTemplate within the same method where the data source object is injected by spring
 * JdbcTemplate is alos thread safe, meaning it can be created once and injected in all DAO beans
 * we'll refactor the _SingerDAO_ to use _JdbcTemplate_
@@ -561,3 +561,28 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 * some develepors prefer to use a named paramters to specifically bound each parameter as intended. this is done through the _NamedParameterJdbcTemplate_ class an extension of _JdbcTemplate_ class
 * the initialization is the same as _JdbcTemplate
 ![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/fddb625a-8e11-4422-8f40-859a8fbc946d)
+* instead of a placeholder the named parameter :singerId is used
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/84f4782d-430a-4a6b-8450-c404d28b3e93)
+#### Retrieving Entity Objects with RowMapper<T>
+* when a query returns a list of rows instead of a single value we have to use the _RowMapper<T>_ interface to map each row to a POJO
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/2c6f666a-b6f8-4d6b-b38b-7f3dfcf30105)
+* the mapRow() method transforms the records inside the ResultSet to the entity that we want
+* we have used a lambda expression to skip explicit implementation
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/084b512f-a77b-4508-8e35-9acb67610f7b)
+#### Retrieving Nested Entity Objects with ResultSetExtractor
+* now we are going to get the albums alongside the singers usign a join and have a entity accordingly (a Set<Album> inside Singer)
+* for this we need to use the _ResultSetExtractor<T>_ interface
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/afe52df6-08a0-47d9-b1a5-872a73cf6d84)
+* we need to implement the extracData() method. in here we have used a lambda expression to simplify the extraction process
+* ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/f5e20f64-5cc9-487d-8f70-88c804bdac3c)
+####  Spring Classes That Model JDBC Operaions
+* alongside the _JdbcTemplate_ spring provides classes that model JDBC data operations and lets us perform operations of converting ResultSet to entities in a more object-orineted fashion
+* we are going to look at:
+   - MappingSqlQuery<T> allows us to wrap the query and the mapRow() in a single class
+   - SqlUpdate allows us to wrap any update SQL query inside it. provides many utility methods for binding parameters and retrieving the generated keys
+   - BatchSqlUpdate allows us to perform batch updates
+   - SqlFunction<T> allows us to call stored functions in a database with arguments and return types. the _StoredProcedure_ class does the same for procedures
+   - setting up jdbc DAO using annotations
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/900c6456-362f-4657-8095-c0324776ceae)
+* we have used @Repository to create a bean of this DAO cass. the _BasicDataSourceCfg_ class works with this bean. @Repository also instructs spring to perform databse specific SQL exceptions to the more application friendly DataAccessException hierarchy in spring
+
