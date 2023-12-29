@@ -585,4 +585,28 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
    - setting up jdbc DAO using annotations
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/900c6456-362f-4657-8095-c0324776ceae)
 * we have used @Repository to create a bean of this DAO cass. the _BasicDataSourceCfg_ class works with this bean. @Repository also instructs spring to perform databse specific SQL exceptions to the more application friendly DataAccessException hierarchy in spring
-
+#### Querying Data Using _MappingSqlQuery<T>_
+* with this class, we provide the datasource and the query, then we implement the mapRow() method to map each resultSet record to a domain object
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/9141f98f-cd2f-4d96-9944-dcee329bd5d7)
+* we use the execute() method inside the findAll() method, which is indirectly inherited from the _SqlQuery<T>_ class. we also use the super() method in the constructor of _SelectAllSinger_ class to create it
+* we can also pass parameters as well
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/ab29555b-37fc-4915-936d-8b49350c78a2)
+* we have used declareParamter() Method which is indirectly inherited from _RdbmsOperation_ class. testing this class will be same as _SelectAllSinger_ class
+#### Updating data by using _SqlUpdate_
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/74c7b28b-596e-4533-ad48-ab0cc8bbd1e1)
+* everything here is similar to before, the updateByNameParam() method takes a map of parameter names and their values.
+#### Inserting Data and Retrieving teh Genrated Key
+* we can isnert data by implementing _SqlUpdate_ as well. the generated id after insertion  and we can retrieve it from the database
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/6c433027-dbf7-4444-b69a-0f998cd5dba3)
+* the _InsertSinger_ class is mostly similar to it's update counterpart. we call the setGeneratedKeyColumnName() to give the name of the Primary Key column. the method setReturnGeneratedKeys() instructs the underlying JDBC driver to return the keys created for inserted records
+* when calling the updateByNamedParam() method we pass an instance of _KeyHolder_ which will have the generated keys stored in it and we can then retrieve them from it
+#### Batch operations with _BatchSqlUpdate_
+* for batch operations we use the _BatchSqlUpdate_ class
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/7aeb4802-06da-486e-b78d-084c475ccced)
+* notice that we use setBatchSize() method to set the batch size (dah!! :) ) for the JDBC insert operation
+* each time we call the insertWithAlbum() method, a new instance of _InsertSingerAlbum_ is create because _BatchSqlUpdate_ is not thread safe. _BatchSqlUpdate_ will queue up the insert operations until they reach the batch size and then inserts them in a batch. after completion we call the flush() method to execute the insert operations that haven't reached the queue size
+#### Calling Stored Functions by Using _SqlFunction_
+* spring provides classes that simplify calling stored functions/procedures using JDBC. here we are going to use the _SqlFunction<T>_. we have a getFirstNameById function in the database. this function accepts the id of recored and return the concatenation of the first name and last name
+![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/11bfbc94-263a-476e-acf0-8f2033d64284)
+* the execute() method returns a list of Strings (the return type is the type we specified in the _SqlFunction<T>_), but we only the first one since there should be only one record with the given id
+#### Spring Data project: JDBC Extensions
