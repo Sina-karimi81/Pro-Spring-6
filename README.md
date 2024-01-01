@@ -627,6 +627,25 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 * @Sql can be grouped together using the @SqlGroup annotations. having multiple @Sql on method is allowed but it is nicer and cleaner to use @SqlGroup
 * @DisplayName annotation is a typical Jupiter annotations used to declare a custom display value for the annotated class or method
 #### Introducing Testcontainers
+* there situations where we cannot test a given code, for example functions or procedures cannot be tested in a H2 database since it diesn't have these concepts. so these kinds of things need to be tested in a real database but preparing a test database may be costly, so an alternative would be to use a database in a container
+* Testcontainers is a java library that supports Junit tests and provides lightweight and throwaway intances of common databases , or anything else that can run in a docker container. the good thing is taht we don't need to create a container manually since Testcontainer prepares everything itself
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/e0739130-50bf-4817-be39-e08a2b43b8b3)
+* this a progarmmatic approach where we created a _MaraiDBContainer_ class that accepts a string which is the docker image and version. then we have used the life cycle annotations to start and shutdown the container gracefully. this container provides all the properties that is needed to create a datasource
+* although this appraoch gets the job done it is recommended to rely on Junit life cycle management to srat and stop the container. this allows us to use a single configuration class. to do this we should do the following:
+  - declare our _MaraiDBContainer_ as a static field in our test class and add the @TestContainers annotation on the class (a Junit Jupiter extension) to  activate the automatic startup and stop of the container
+  - annotate the container field usign @Container to let junit know that this field is our container
+  - use @DynamicPropertySource on a method to register the container properties as a configuration properties for the datasource bean
+  - we are also going to need to provide the script so we will use the @Sql* family to populate the container
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/99f16fa8-d803-459a-aac1-5e55485e6d54)
+* using Testcontainers simplifies things bbut they are not perfect sometime valid SQL queries are not recognized and some changes must be made to them or the files must be copied to the container and executed directly on it
+* our first approach must be to change the script itself to work but if that doesn't work we have to copy the files onto the container
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/7aec016a-e644-456a-b6f9-1f8c1370c06e)
+* since we are ruuning the scripts directly on the container we don't need the @Sql* family annotations anymore. copying the files can be done in many ways. the way we showed above works for MariaDB, it gets the job done
+#### Considerations for Using JDBC
+* with many features, usign JDBC can siplify our interactiosn with RDBMS, however it requires alot of code to be develop easpecially when transforming the aresultSet to Java POJOs
+* on top of JDBC there are alot of open source libraries that to help close the gap between relational data and java OO model like iBATIS (a data mapper framework) that transforms ResultSet to domain object using xml descriptor files. there are also many ORM framework tha focus on object model, rather than the query for example Hibernate, EclipseLink and OpenJPA which all comply with JPA specification
+* in recent years developers mostly rely on ORM tool instead of using JDBC directly however in cases where you need to have absolute control over the query (for example for performance purposes) JDBC is vialbe option
+* the buaty is that spring lets us mix and match different solutions together. for example we can use hibernate as our main ORM and JDBC as a supplement for more complex queries and batch operations. we can mix them in a single business operation and wrap them under a single transaction
 
 
 
