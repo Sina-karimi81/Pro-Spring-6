@@ -610,3 +610,23 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 ![Pro Spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/11bfbc94-263a-476e-acf0-8f2033d64284)
 * the execute() method returns a list of Strings (the return type is the type we specified in the _SqlFunction<T>_), but we only the first one since there should be only one record with the given id
 #### Spring Data project: JDBC Extensions
+* in recent years where new technologies have emerged for databases, spring created the spring data project to provide useful extensions on top already existing functionality to interact with databses other than traditional databases
+* one such extesion is the JDBC extension. it provides advanced features to facilitate the development of JDBC applications
+  - QueryDSL: is a domain specific language that provides that provides a framework for developing type safe queries. it provides QueryDslJdbcTemplate to use QueryDSL instead of raw SQL
+    ![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/9c8682a2-5bb3-468d-8bab-2fd9c0c387be)
+  - Advanced support for oracle database: this extension provides advanced support for oracle databases. it supports oracle specific session settings and provides classes taht integrate with oracle advanced queueing. and provides native support for oracle's xml types, STRUCT and ARRAY and so on
+#### Spring JDBC Testing Annotations
+* in this part we are going to look at some jdbc testing annotations such as @Sql, @SqlConfig, @SqlGroup, @SqlMergeMethod. all the test shown here use an in memory database and create their own application context
+* @Sql is used on a method or class to configure SQL scripts or statements to be executed against a given database during testing. can be used with plain JDBC or more complex applications using transactions and persistence
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/96585906-353c-47bc-8386-5f7f5f0697e7)
+* the test application context is created using @SpringJUnitJupiterConfig. this is a composed annotation that combines @ExtendWith(SpringExtension.class) with @ContexConfiguration.
+* we have used the @Sql on teh class to give the address of DDL scripts to create the tables or destroy them. the @Sql on the method is sued to give the method a DML script to run and fill the table with data before method's execution
+* @Sql can be configured using the @SqlConfigure to provide more details about the script being executed. @Sql also provides a executionPhase attribute that is used to specify the if the sctipts should be executed before or after method execution
+* the @SqlMergeMode(MergeMode.MERGE) annotation indicates that method level @Sql scripts declarations must be merged with class level @Sql scripts whereas @SqlMergeMode(MergeMode.OVERRIDE) means method delcarations override the class level ones. if we have both class level and method level @Sql we should use @SqlMergeMode or we will have exceptions since class level @Sql are ignored if @SqlMergeMode is not specified
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/3dc03ebb-577d-4188-a52a-22451ba49dd8)
+* @Sql can be grouped together using the @SqlGroup annotations. having multiple @Sql on method is allowed but it is nicer and cleaner to use @SqlGroup
+* @DisplayName annotation is a typical Jupiter annotations used to declare a custom display value for the annotated class or method
+#### Introducing Testcontainers
+
+
+
