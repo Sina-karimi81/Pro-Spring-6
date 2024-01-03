@@ -647,5 +647,33 @@ A Repository Containing a Summary of Pro Spring 6 book. please beware that these
 * in recent years developers mostly rely on ORM tool instead of using JDBC directly however in cases where you need to have absolute control over the query (for example for performance purposes) JDBC is vialbe option
 * the buaty is that spring lets us mix and match different solutions together. for example we can use hibernate as our main ORM and JDBC as a supplement for more complex queries and batch operations. we can mix them in a single business operation and wrap them under a single transaction
 
-
+## Spring With Hibernate
+* preciously we talked about JDBC and how spring made JDBC development easier, but we still we have to write a lot of code to get the job done. to make things even simpler persistence frameworks were created. in this chapter we are going to focus on Hibernate, one the most commonly used ORM frameworks and also take look at JOOQ as well
+* the purpose of an ORM lobrary is to close the gap between the relational data model of a RDBMS and object oriented model in java so that programmers can focus on working with object model and easily perform persistence actions
+* since Hibernate provides and implementations for JPA, we can choose to use Hibernate's own API or JPA API
+* we are going to cover the following:
+  - Configuring Hibernate SessionFactory: this is the core concept of hibernate and we are going to see how we can configure it
+  - Major ORM concepts using hibernate: we'll learn major concepts of how to use hibernate to map a POJO to a relational Entity and their relationships
+  - Data operations: we are going to learn how to perform data operations
+* our data model is the same as the last chapter but we are going to add an instrument table to it as well
+### Configuring Hibernate SessionFactory
+* as mentioned before, the core concept of hibernate is the _Session_ Interface and it is obtained using _SessionFactory_ class. spring provides classes that support configuring _SessionFactory_ as a spring bean with desired properties
+* the configurations are built on top of a DataSource configuration but in this chapter we are going to use HikariCP to setup connection pooling
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/f24c7507-f821-4a6e-8f67-c8f1765e911e)
+* there are few things to note here
+ - taransaction manager: hibernate session factory requires a transanction manager fro transactional data access. we have used @EnableTransationManagement to do this. if XML config was used we needed a bean with the exact name of transactionManager. with java config only the type is important
+ - @ComponentScan is used to detect beans with @Repository which contain methods for accessing data
+ - SessionFactory bean is the most importatn part of this configuration. first teh datasource is configured, then we isntruct it to scan packages for entities and finally the hibernate properties which we listed above in the comments
+### ORM Mapping Using Hibernate Annotations
+* next we have to maodel the java POJO entity and their mapping to the underlying relational data
+* there are 2 approaches for this. first is to create the POJOs first and the configure the HBM2DDl to auto or create so the relational data model is created by hibernate however this is not suitable for produciton environment.
+* the second appraoch is to start with the realational data model and then create the POJOs absed on them. this appraoch is preffered for development and production since it provides greater control over the data model and also optimization of performance
+* as said earlier we have the same entities as before: _Singer_ and _Album_ (_Singer_ has a one to many relation with _Album_). a new Entity of _Instrument_ is added which has many to many relation with _Singer_. we also have an _AbstractEntity_ class that stores the id and version (used for auditing) fields since they are a common part of both _Singer_ and _Album_. _AbstractEntity_ is marked with @MappedSuperclass that designates a class whose mapping inforamtion is applies to entities that inherit from it
+### Simple Mapping
+![pro spring](https://github.com/Sina-karimi81/Pro-Spring-6/assets/83176938/94e84dc0-0436-45c6-aa92-f48e28dcd765)
+* these are our entiteies. we have ommitted the code related to mapping for now to focus on other things
+* first we annotate a class with @Entity to mark it as a mapped entity class, also a class marked with this annotation must have field annotated with @Id, this column represents teh primary key of the table. the @Table annotation defines the table name in the database this entity is being mapped to. for each mapped attribute (i.e field) we can annotate it with @Column to give it the name of the column it is representing (if the type and name of the coulmn is the same as the field then there is no need to use @Column)
+* @GeneratedValue tells hibernate how the id value is generated. the IDENTITY strategy means that the id value is generated by the back end during insertion
+* for the version attribute we annotate it with @Version. this instructs hibernate to use a optimistic licking mechanism using the version attribute to control it. when we update a record, hibernate compares the value of version with the one in the database andif they are the same the record is updated and the value of version is incremented. if not hibernate will throw a _StaleObjectStateException_ which spring translates to _HibernateOptimisticLockingFailureException_. here we have used an integer to represent the version but hibrnate supports timestamp as well
+* it is recommended to use integer instead of timestamp since hibernate increments the value by one. when using the timestamp hibernate will update the latest timestamp and it is a littel unsafe since two concurrent transaction may load and update the saem record in the same millisecond
 
